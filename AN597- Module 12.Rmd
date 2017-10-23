@@ -1,0 +1,228 @@
+---
+title: "AN597- Module 12"
+author: "Faye Harwell"
+date: "October 17, 2017"
+output: html_document
+---
+
+#### Variance- the sum of the squared deviaiations of each observation from the mean divided by sample size (n for population variance or n-1 for sample variance). 
+
+#### Covariance- the product of the deviations of each of two variables from their respective means divided by sample size.
+
+```{r}
+library(curl)
+library(ggplot2)
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN597_Fall17/zombies.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+```
+
+```{r}
+plot(data = d, height ~ weight)
+```
+#### What is the covariance between zombie weight and zombie height? What does it mean if the covariance is positive versus negative? Does it matter if you switch the order of the two variables?
+
+```{r}
+w <- d$weight
+h <- d$height
+n <- length(w)  # or length(h)
+cov_wh <- sum((w - mean(w)) * (h - mean(h)))/(n - 1)
+cov_wh
+```
+
+#### The built-in R function cov() yields the same result
+
+```{r}
+cov(w,h)
+```
+
+#### Calculate the correlation between zombie height and weight.
+
+```{r}
+sd_w <- sd(w)
+sd_h <- sd(h)
+cor_wh <- cov_wh/(sd_w * sd_h)
+cor_wh
+```
+#### Again, there is a built-in R function cor() which yields the same
+
+```{r}
+cor(w,h)
+```
+```{r}
+cor(w, h, method = "pearson")
+```
+
+#### This formulation of the correlation coefficient is referred to as Pearson’s product-moment correlation coefficient and is often abbreviated as ρρ.
+
+There are other, nonparametric forms of the correlation coefficient we might also calculate:
+
+```{r}
+cor(w,h,method="kendall")
+```
+```{r}
+cor(w,h,method="spearman")
+```
+
+# Regression
+
+#### Regression is the set of tools that lets us explore the relationships between variables further. In regression analysis, we are typically identifying and exploring linear models, or functions, that describe the relationship between variables. There are a couple of main purposes for undertaking regression analyses:
+
+##### To use one or more variables to predict the value of another
+##### To develop and choose among different models of the relationship between varaiables
+##### To do analyses of covariation among sets of variables to identify their relative explanatory power
+
+#### The general purpose of linear regression is to come up with a model or function that estimates the mean value of one variable, i.e., the response or outcome variable, given the particular value(s) of another variable or set of variables, i.e., the predictor variable(s).
+
+#### Let’s fit the model by hand… The first thing to do is estimate the slope, which we can do if we first “center” each of our variables by subtracting the mean from each value (this shifts the distribution to eliminate the intercept term).
+
+```{r}
+y <- h - mean(h)
+x <- w - mean(w)
+z <- data.frame(cbind(x, y))
+g <- ggplot(data = z, aes(x = x, y = y)) + geom_point()
+g
+```
+
+#### We can explore finding the best slope (β1β1) for this line using an interactive approach…
+
+```{r}
+slope.test <- function(beta1) {
+    g <- ggplot(data = z, aes(x = x, y = y))
+    g <- g + geom_point()
+    g <- g + geom_abline(intercept = 0, slope = beta1, size = 1, colour = "blue", 
+        alpha = 1/2)
+    ols <- sum((y - beta1 * x)^2)
+    g <- g + ggtitle(paste("Slope = ", beta1, "\nSum of Squared Deviations = ", 
+        round(ols, 3)))
+    g
+}
+```
+
+```{r}
+manipulate(slope.test(beta1), beta1 = slider(-1, 1, initial = 0, step = 0.005))
+```
+```{r}
+beta1 <- cor(w, h) * (sd(h)/sd(w))
+beta1
+```
+```{r}
+beta1 <- cov(w, h)/var(w)
+beta1
+```
+```{r}
+beta1 <- sum((h - mean(h)) * (w - mean(w)))/sum((w - mean(w))^2)
+beta1
+```
+```{r}
+beta0 <- mean(h) - beta1 * mean(w)
+beta0
+```
+ 
+# lm() Function
+
+#### The function lm() in R makes all of the calculations we did above for Model I regression very easy! Below, we pass the zombies dataframe and variables directly to lm() and assign the result to an R object called m. We can then look at the various elements that R calculates about this model.
+
+```{r}
+m <- lm(height ~ weight, data = d)
+m
+```
+
+```{r}
+names(m)
+```
+```{r}
+m$coefficients
+```
+```{r}
+head(m$model)
+```
+
+## Linear Model Plotted with Confidence Intervals
+
+```{r}
+g <- ggplot(data = d, aes(x = weight, y = height))
+g <- g + geom_point()
+g <- g + geom_smooth(method = "lm", formula = y ~ x)
+g
+```
+
+#### We thus are not seeking an equation of how YY varies with changes in XX, but rather we are look for how they both co-vary in response to some other variable or process.
+
+### Model II- a line of best fit is chosen to minimize in some way the direct distance of each point to the best fit line
+
+#### There are several types of Model II regressions, but some common approaches are major axis, ranged major axis, and reduced major axis regression. 
+
+## {lmodel2} package- allows us to do Model II regression easily (as well as Model I). In this package, the signficance of the regression coefficients is determined based on permutation.
+
+```{r}
+library(lmodel2)  # load the lmodel2 package
+# Run the regression
+mII <- lmodel2(height ~ weight, data = d, range.y = "relative", range.x = "relative", 
+    nperm = 1000)
+mII
+```
+
+```{r}
+plot(mII, "OLS")
+```
+
+```{r}
+plot(mII, "RMA")
+```
+```{r}
+plot(mII, "SMA")
+```
+
+```{r}
+plot(mII, "MA")
+```
+#### Note that, here, running lmodel2() and using OLS to detemine the best coefficients yields equivalent results to our Model I regression done above using lm().
+
+```{r}
+mI <- lm(height ~ weight, data = d)
+summary(mI)
+```
+```{r}
+par(mfrow = c(1, 2))
+plot(mII, main = "lmodel2() OLS")
+plot(data = d, height ~ weight, main = "lm()")
+abline(mI)
+```
+
+## Challenge
+
+#### Using the zombies dataset, work with a partner to…
+
+#### 1) Plot zombie height as a function of age
+#### 2) Derive by hand the ordinary least squares regression coefficients β1 and β0 for these data.
+#### 3) Confirm that you get the same results using the lm() function
+#### 4) Repeat the analysis above for males and females separately. Do your regression coefficients differ? How might you determine this?
+
+
+#### This is #1... da plot!
+
+```{r}
+plot(data = d, height ~ age)
+```
+
+#### These are the steps for #2... deriving by hand! 
+
+```{r}
+head(d)
+```
+
+```{r}
+beta1 <- cor(d$height, d$age) * sd(d$height)/sd(d$age)
+beta1
+```
+
+```{r}
+beta0 <- mean(d$height) - beta1 * mean(d$age)
+beta0
+```
+
+```{r}
+m <- lm(height ~ age, data = d)
+m
+```

@@ -1,0 +1,83 @@
+---
+title: "Faye Harwell- AN597 Week 6 Homework"
+author: "Faye Harwell"
+date: "October 22, 2017"
+output: html_document
+---
+
+# Homework (Shoot me now... jk I got this. Maybe.)
+
+#### Forget what a Z-test is? Yes. Here you go Faye...
+
+## Z-Test
+
+#### "Once null and alternative hypotheses have been formulated for a particular claim, the next step is to compute a test statistic. For claims about a population mean from a population with a normal distribution or for any sample with large sample size n (for which the sample mean will follow a normal distribution by the Central Limit Theorem), if the standard deviation is known, the appropriate significance test is known as the z-test."
+
+```{r}
+Z.prop.test <- function(p1,n1,p2=NULL,n2=NULL,p0,alternative="two.sided",conf.level=0.95) {
+  Z.score=0
+  Z.score <- NULL
+  conf.interval <- NULL
+  p.value <- NULL
+  q1 <- 1 - p1
+
+  if(is.null(p2)){
+    Standard.Deviation <- sqrt((p1*q1)/n1) # To calculate a p-value, you need to calculate the standard deviation first
+    Z.score <- (p1-p0)/Standard.Deviation
+    p.value <- pnorm(Z.score)
+    if(alternative=="two.sided"||alternative=="t") {
+      if(Z.score<0){
+      p.value <- p.value * 2}
+      else
+        p.value <- 2*(1-p.value)
+    }
+    if(alternative=="greater"||alternative=="g") {
+      p.value <- 1 - p.value
+    }
+
+  conf.interval <- p1 + c( -1*((qnorm(((1 - conf.level)/2) + conf.level))*Standard.Deviation),((qnorm(((1 - conf.level)/2) + conf.level))*Standard.Deviation))
+  
+  if(n1*p1 < 5 || n1*(1-p1) < 5){
+    cat("Warning: Conditions for testing this sample against a normal distribution may not be met")
+  }
+  
+  return(list(estimate=p1,ZScore= Z.score,pvalue= p.value,confinterval= conf.interval))
+  }
+  # For a two-sample z test:
+  else{
+    q2 <- 1 - p2
+  Standard.Deviation <- sqrt(((p1*q1)/n1)+((p2*q2)/n2)) # To calculate a p-value, you need to calculate the standard deviation first
+    Z.score <- (p2-p1-p0)/Standard.Deviation
+    p.value <- pnorm(Z.score)
+    if(alternative=="two.sided"||alternative=="t") {
+      if(Z.score<0){
+      p.value <- p.value * 2}
+      else
+        p.value <- 2*(1-p.value)
+    }
+    if(alternative=="greater"||alternative=="g") {
+      p.value <- 1 - p.value
+    }
+
+  conf.interval <- (p2-p1) + c( -1*((qnorm(((1 - conf.level)/2) + conf.level))*Standard.Deviation),((qnorm(((1 - conf.level)/2) + conf.level))*Standard.Deviation))
+  
+  if(n1*p1 < 5 || n1*(1-p1) < 5 || n2*p2 < 5 || n2*(1-p2) < 5){
+    cat("Warning: Conditions for testing this sample against a normal distribution may not be met")
+  }
+  
+  return(list(estimate=p1,ZScore= Z.score,pvalue= p.value,confinterval= conf.interval))
+  }
+}
+```
+
+#### Example to Test the Function: Newborn babies are more likely to be boys than girls. A random sample found 13,173 boys were born among 25,468 newborn children. The sample proportion of boys was 0.5172. Is this sample evidence that the birth of boys is more common than the birth of girls in the entire population?
+
+```{r}
+Z.prop.test(0.5172,25468,NULL,NULL,0.5,alternative="greater")
+```
+
+
+#### Just to test the warnings...
+```{r}
+Z.prop.test(0.5172,4,NULL,NULL,0.5,alternative="greater")
+```

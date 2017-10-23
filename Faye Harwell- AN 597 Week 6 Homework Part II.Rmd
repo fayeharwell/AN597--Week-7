@@ -1,0 +1,44 @@
+---
+title: "AN597- Homework 10/23- Part II"
+author: "Faye Harwell"
+date: "October 18, 2017"
+output: html_document
+---
+# Homework Part II
+
+#### You should probably start by downloading the dataset...
+```{r}
+library(curl)
+Stuff<- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN597_Fall17/KamilarAndCooperData.csv")
+Stuf <- read.csv(Stuff, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(Stuf)
+```
+
+#### THe following steps are going far more painful than that first step, but I suppose that is okay
+
+#### Step 1: Fit the regression model and, using {ggplot2}, produce a scatterplot with the fitted line superimposed upon the data. Append the the fitted model equation to your plot (HINT: use the function geom_text()).
+
+```{r}
+lm(Stuf$MaxLongevity_m ~ Stuf$Brain_Size_Species_Mean)-> X
+X
+summary(X)
+```
+
+
+```{r}
+library(ggplot2)
+Plot <- ggplot(data = Stuf, aes(x = Brain_Size_Species_Mean, y = MaxLongevity_m))
+Plot <- Plot + geom_point()
+Plot <- Plot + geom_smooth(method = "lm", formula = y ~ x)
+
+
+Plot
+```
+
+## Step #2: Identify and interpret the point estimate of the slope (β1), as well as the outcome of the test associated with the hypotheses H0: β1 = 0; HA: β1 ≠ 0. Also, find a 90 percent CI for the slope (β1) parameter.
+
+#### From using the lm() function, you can easily determine β1= 1.218. Thus, you can support the alternative hypothesis that HA: β1 ≠ 0, since the p-value falls below the value of alpha. 
+
+## Step #3: Using your model, add lines for the 90 percent confidence and prediction interval bands on the plot and add a legend to differentiate between the lines.
+
+## Step #4: Produce a point estimate and associated 90 percent PI for the longevity of a species whose brain weight is 800 gm. Do you trust the model to predict observations accurately for this value of the explanatory variable? Why or why not?
