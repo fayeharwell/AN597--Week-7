@@ -16,7 +16,6 @@ Stuf <- read.csv(Stuff, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 head(Stuf)
 ```
 
-#### THe following steps are going far more painful than that first step, but I suppose that is okay
 
 #### Step 1: Fit the regression model and, using {ggplot2}, produce a scatterplot with the fitted line superimposed upon the data. Append the the fitted model equation to your plot (HINT: use the function geom_text()).
 
