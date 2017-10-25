@@ -23,6 +23,9 @@ output: html_document
 #### First, let’s set up a skeleton function we will call typeI() to evaluate the Type I error rate. It should take, as arguments, the parameters of the normal distribution for the null hypothesis we want to simulate from (μ0 and σ), our sample size, our $ level, what “alternative” type of Z (or T) test we want to do (“greater”, “less”, or “two.tailed”) and the number of simulated datasets we want to generate. Type in the code below (and note that we set default values for αα and the number of simulations). Note that we can use the “t” family of functions instead of the “norm” family.
 
 ```{r}
+library(ggplot2)
+library(curl)
+library(manipulate)
 typeI <- function(mu0, sigma, n, alternative = "two.tailed", alpha = 0.05, k = 1000) {
     p <- rep(NA, k)  # sets up a vector of empty p values
     for (i in 1:k) {
@@ -122,12 +125,15 @@ eI <- typeI(mu0 = 5, sigma = 2, n = 1000, alternative = "less", alpha = 0.01)
 
 ###Challenge Question: How does the Type I error rate change with n? With σ? With αα HINT: It shouldn’t change much… the Type I error rate is defined by α!
 
-#### Answer: n seems to decrease the type I error rate ever so slightly. And if you change alpha, it becomes significantly smaller. 
+#### Answer: n seems to decrease the type I error rate ever so slightly. This makes sense- you have less error rate as you increase your sample size. And if you change alpha, it becomes significantly decreases. 
 
 ## Multiple Comparisons Correction 
 
 ###Bonferroni Correction
+
 #### One way we can address the multiple testing problem discussed above by using what is called the Bonferroni correction, which suggests that when doing a total of k independent hypothesis tests, each with a significance level of αα, we should adjust the αα level we use to interpret statistical significance as follow: αB = α/k. For example, if we run 10 independent hypothesis tests, then we should set our adjusted α level for each test as 0.05/10 = 0.005. With the Bonferroni correction, we are essentially saying that we want to control the rate at which we have even one incorrect rejection of H0 given the entire family of tests we do. This is also referred to as limiting the “family-wise error rate” to level α.
+
+#### People in anthropology don't usually use Bonferroni Corrections... because you end up imposing Type II errors
 
 #### Note that Bonferroni is very conservative- there are less conservative tests that statisticians find acceptable to use as well
 
@@ -389,6 +395,7 @@ power.plot <- function(sigma, muA, mu0, n, alpha, alternative = "two.tailed") {
 
 ```{r}
 library(manipulate)
+library(ggplot2)
 manipulate(power.plot(sigma, muA, mu0, n, alpha, alternative), sigma = slider(1, 
     10, step = 1, initial = 4), muA = slider(-10, 10, step = 1, initial = 2), 
     mu0 = slider(-10, 10, step = 1, initial = 0), n = slider(1, 50, step = 1, 
